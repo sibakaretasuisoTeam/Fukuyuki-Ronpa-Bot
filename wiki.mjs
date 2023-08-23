@@ -18,7 +18,6 @@ class Wiki {
       default:
         break;
     }
-    console.log(res);
     return res;
   }
 }

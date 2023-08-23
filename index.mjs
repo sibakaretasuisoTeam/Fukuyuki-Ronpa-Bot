@@ -124,7 +124,8 @@ app.post("/webhook", (request, response, buf) => {
             break;
           case "richmenu=2":
             state = Enum.SITE;
-            await lineApi.replyMessage(event.replyToken, "リッチメニュー2");
+            await lineApi.replyMessage(event.replyToken, "伝統工芸品が購入できるサイトを紹介します。\nプレイヤーカードをレベルアップさせて入手したクーポンが使えるので是非購入してみてください。");
+            await lineApi.pushSiteFlexMessage(event.source.userId);
             break;
           case "richmenu=3":
             state = Enum.WIKI;
@@ -195,7 +196,7 @@ richMenuId = richMenuId.data.richMenuId;
 await lineApi.uploadImage(richMenuId, "img/test.png");
 await lineApi.setDefaultRichMenu(richMenuId);
 
-
+//await lineApi.pushFlexMessage("U3ffeea449fc263a880fd0578aa9a4acf");
 
 
 
