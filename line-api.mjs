@@ -34,8 +34,6 @@ class LineApi {
     return await this.api.post("/bot/message/reply", body);
   }
 
-  // ここにさらに必要に応じてAPIを呼び出すメソッドを定義しましょう
-
   // プッシュメッセージAPI
   async pushMessage(to, message) {
     const body = {
@@ -164,7 +162,7 @@ class LineApi {
     return await this.api.post("/bot/user/all/richmenu/" + richMenuId);
   }
 
-  //Flex Messageを送信するAPI
+  //サイト紹介をFlex Messageで送信するAPI
   async pushSiteFlexMessage(to) {
     const body = {
       to,
