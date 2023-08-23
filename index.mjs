@@ -9,7 +9,7 @@ import fs from "fs";
 import dotenv from "dotenv";
 
 import { LineApi } from "./line-api.mjs";
-//import { Resuba } from "./resuba.mjs";
+import { Resuba } from "./resuba.mjs";
 
 // .envファイル空環境変数を読み込み
 dotenv.config();
@@ -30,7 +30,7 @@ app.use(
 app.listen(8080);
 
 const lineApi = new LineApi(CHANNEL_ACCESS_TOKEN);
-//const resubaApi = new Resuba(CHANNEL_ACCESS_TOKEN);
+const resubaApi = new Resuba(CHANNEL_ACCESS_TOKEN);
 
 //ユーザーIDを格納する配列
 let userIds = [];
@@ -96,7 +96,8 @@ app.post("/webhook", (request, response, buf) => {
             break;
 
           default:
-            //await resubaApi.debateAI(event.replyToken,event.message.text);
+            // Resuba クラスを使用してAIの返答を取得
+            await resubaApi.debateAI(event.replyToken, event.message.text);
             break;
         }
         console.log('\x1b[34m', event.source.userId + " : " + event.message.text);
