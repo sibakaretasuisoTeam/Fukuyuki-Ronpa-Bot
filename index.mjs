@@ -41,8 +41,8 @@ app.use(
 app.listen(8080);
 
 const lineApi = new LineApi(CHANNEL_ACCESS_TOKEN);
-const wiki = new Wiki();
 const site = new Site(CHANNEL_ACCESS_TOKEN);
+const wiki = new Wiki();
 
 //ユーザーIDを格納する配列
 let userIds = [];

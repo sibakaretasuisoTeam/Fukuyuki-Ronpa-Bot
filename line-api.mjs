@@ -18,7 +18,7 @@ class LineApi {
     });
   }
 
-  // 応答メッセージAPI
+  // 応答メッセージ
   async replyMessage(replyToken, message) {
     const body = {
       replyToken,
@@ -33,7 +33,7 @@ class LineApi {
     return await this.api.post("/bot/message/reply", body);
   }
 
-  // プッシュメッセージAPI
+  // プッシュメッセージ
   async pushMessage(to, message) {
     const body = {
       to,
@@ -47,42 +47,7 @@ class LineApi {
     return await this.api.post("/bot/message/push", body);
   }
 
-  //ボタンテンプレートメッセージAPI
-  async startJanken(to) {
-    const body = {
-      to,
-      messages: [
-        {
-          type: "template",
-          altText: "じゃんけん",
-          template: {
-            type: "buttons",
-            text: "じゃんけんしましょう",
-            actions: [
-              {
-                type: "postback",
-                label: "ぐー",
-                data: "action=gu"
-              },
-              {
-                "type": "postback",
-                "label": "ちょき",
-                "data": "action=choki"
-              },
-              {
-                "type": "postback",
-                "label": "ぱー",
-                "data": "action=pa"
-              }
-            ]
-          },
-        },
-      ],
-    };
-    return await this.api.post("/bot/message/push", body);
-  }
-
-  //リッチメニュー作成API
+  //リッチメニュー作成
   async setRichMenu() {
     const body = {
       "size": {
@@ -146,7 +111,7 @@ class LineApi {
     return await this.api.post("/bot/richmenu", body);
   }
 
-  //画像をアップロードするAPI
+  //画像をリッチメニューに設定
   async uploadImage(richMenuId, image) {
     const apiUrl = `https://api-data.line.me/v2/bot/richmenu/${richMenuId}/content`;
     const file = fs.readFileSync(image);
@@ -157,8 +122,10 @@ class LineApi {
     return await axios.post(apiUrl, file, { headers: headers })
   }
 
+  //リッチメニューをデフォルトに設定
   async setDefaultRichMenu(richMenuId) {
     return await this.api.post("/bot/user/all/richmenu/" + richMenuId);
   }
 }
+
 export { LineApi };
