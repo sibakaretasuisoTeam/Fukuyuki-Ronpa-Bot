@@ -9,12 +9,23 @@ import fs from "fs";
 import dotenv from "dotenv";
 
 import { LineApi } from "./line-api.mjs";
+import { Wiki } from "./wiki.mjs";
 
 // .envファイル空環境変数を読み込み
 dotenv.config();
 // LINEのチャネルシークレットをCHANNEL_SECRET環境変数から読み込み
 const CHANNEL_SECRET = process.env.CHANNEL_SECRET;
 const CHANNEL_ACCESS_TOKEN = process.env.CHANNEL_ACCESS_TOKEN;
+
+const Enum = {
+  RESUBA: "RESUBA",
+  CARD: "CARD",
+  SITE: "SITE",
+  WIKI: "WIKI",
+  MENU: "MENU"
+}
+
+let state = Enum.MENU;
 
 // expressの初期化
 const app = express();
@@ -29,6 +40,7 @@ app.use(
 app.listen(8080);
 
 const lineApi = new LineApi(CHANNEL_ACCESS_TOKEN);
+const wiki = new Wiki();
 
 //ユーザーIDを格納する配列
 let userIds = [];
@@ -88,56 +100,36 @@ app.post("/webhook", (request, response, buf) => {
           saveUserIds();
         }
 
-        switch (event.message.text) {
-          case "じゃんけん":
-            await lineApi.startJanken(event.source.userId);
+        switch (state) {
+          case Enum.RESUBA:
             break;
-
-          default:
-            await lineApi.replyMessage(event.replyToken, `返信: ${event.message.text}`);
+          case Enum.CARD:
+            break;
+          case Enum.SITE:
+            break;
+          case Enum.WIKI:
+            await lineApi.replyMessage(event.replyToken, wiki.sendWiki(event.message.text));
             break;
         }
-        console.log('\x1b[34m', event.source.userId + " : " + event.message.text);
         break;
       case "postback": // event.typeがpostbackのとき応答
-        //ランダムに手を選ぶ
-        const hand = Math.floor(Math.random() * 3);
         switch (event.postback.data) {
-          case "action=gu":
-            if (hand == 0) {
-              await lineApi.replyMessage(event.replyToken, "こちらの手もぐー、あいこ！");
-            }
-            else if (hand == 1) {
-              await lineApi.replyMessage(event.replyToken, "こちらの手はちょき、あなたの勝ち！");
-            }
-            else {
-              await lineApi.replyMessage(event.replyToken, "こちらの手はぱー、あなたの負け！");
-            }
+          case "richmenu=0":
+            state = Enum.RESUBA;
+            await lineApi.replyMessage(event.replyToken, "リッチメニュー0");
             break;
-          case "action=choki":
-            if (hand == 0) {
-              await lineApi.replyMessage(event.replyToken, "こちらの手はぐー、あなたの負け！");
-            }
-            else if (hand == 1) {
-              await lineApi.replyMessage(event.replyToken, "こちらの手もちょき、あいこ！");
-            }
-            else {
-              await lineApi.replyMessage(event.replyToken, "こちらの手はぱー、あなたの勝ち！");
-            }
+          case "richmenu=1":
+            state = Enum.CARD;
+            await lineApi.replyMessage(event.replyToken, "リッチメニュー1");
             break;
-          case "action=pa":
-            if (hand == 0) {
-              await lineApi.replyMessage(event.replyToken, "こちらの手はぐー、あなたの勝ち！");
-            }
-            else if (hand == 1) {
-              await lineApi.replyMessage(event.replyToken, "こちらの手はちょき、あなたの負け！");
-            }
-            else {
-              await lineApi.replyMessage(event.replyToken, "こちらの手もぱー、あいこ！");
-            }
+          case "richmenu=2":
+            state = Enum.SITE;
+            await lineApi.replyMessage(event.replyToken, "リッチメニュー2");
             break;
-
-          default:
+          case "richmenu=3":
+            state = Enum.WIKI;
+            await lineApi.replyMessage(event.replyToken, wiki.sendOptions());
+            //await client.unlinkRichMenuFromUser(event.source.userId);
             break;
         }
         break;
@@ -148,6 +140,7 @@ app.post("/webhook", (request, response, buf) => {
           saveUserIds();
         }
         await lineApi.replyMessage(event.replyToken, "友達追加ありがとう!あなたのユーザーIDは" + event.source.userId + "です");
+        break;
     }
   });
 
@@ -194,12 +187,14 @@ function verifySignature(body, receivedSignature, channelSecret) {
 loadUserIds();
 loopRL();
 
-// lineApi.startJanken("U3ffeea449fc263a880fd0578aa9a4acf"); //泉
+// U3ffeea449fc263a880fd0578aa9a4acf //泉
 
+//リッチメニュー設定
 let richMenuId = await lineApi.setRichMenu();
 richMenuId = richMenuId.data.richMenuId;
 await lineApi.uploadImage(richMenuId, "img/test.png");
 await lineApi.setDefaultRichMenu(richMenuId);
+
 
 
 

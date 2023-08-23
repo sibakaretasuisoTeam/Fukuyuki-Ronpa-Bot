@@ -92,44 +92,56 @@ class LineApi {
         "width": 2500,
         "height": 1686
       },
-      "selected": false,
-      "name": "LINE Developers Info",
-      "chatBarText": "Tap to open",
+      "selected": true,
+      "name": "Rich Menu Example",
+      "chatBarText": "メニューを開く",
       "areas": [
         {
           "bounds": {
-            "x": 34,
-            "y": 24,
-            "width": 169,
-            "height": 193
+            "x": 0,
+            "y": 0,
+            "width": 1250,
+            "height": 843
           },
           "action": {
-            "type": "uri",
-            "uri": "https://developers.line.biz/ja/news/"
+            "type": "postback",
+            "data": "richmenu=0"
           }
         },
         {
           "bounds": {
-            "x": 229,
-            "y": 24,
-            "width": 207,
-            "height": 193
+            "x": 1250,
+            "y": 0,
+            "width": 1250,
+            "height": 843
           },
           "action": {
-            "type": "uri",
-            "uri": "https://www.line-community.me/"
+            "type": "postback",
+            "data": "richmenu=1"
           }
         },
         {
           "bounds": {
-            "x": 461,
-            "y": 24,
-            "width": 173,
-            "height": 193
+            "x": 0,
+            "y": 843,
+            "width": 1250,
+            "height": 843
           },
           "action": {
-            "type": "uri",
-            "uri": "https://engineering.linecorp.com/ja/blog/"
+            "type": "postback",
+            "data": "richmenu=2"
+          }
+        },
+        {
+          "bounds": {
+            "x": 1250,
+            "y": 843,
+            "width": 1250,
+            "height": 843
+          },
+          "action": {
+            "type": "postback",
+            "data": "richmenu=3"
           }
         }
       ]
