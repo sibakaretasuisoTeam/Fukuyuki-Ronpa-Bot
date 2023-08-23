@@ -10,6 +10,7 @@ import dotenv from "dotenv";
 
 import { LineApi } from "./line-api.mjs";
 import { Wiki } from "./wiki.mjs";
+import { Site } from "./site.mjs";
 
 // .envファイル空環境変数を読み込み
 dotenv.config();
@@ -41,6 +42,7 @@ app.listen(8080);
 
 const lineApi = new LineApi(CHANNEL_ACCESS_TOKEN);
 const wiki = new Wiki();
+const site = new Site(CHANNEL_ACCESS_TOKEN);
 
 //ユーザーIDを格納する配列
 let userIds = [];
@@ -124,8 +126,8 @@ app.post("/webhook", (request, response, buf) => {
             break;
           case "richmenu=2":
             state = Enum.SITE;
-            await lineApi.replyMessage(event.replyToken, "伝統工芸品が購入できるサイトを紹介します。\nプレイヤーカードをレベルアップさせて入手したクーポンが使えるので是非購入してみてください。");
-            await lineApi.pushSiteFlexMessage(event.source.userId);
+            await lineApi.replyMessage(event.replyToken, site.sendDiscription());
+            await site.pushSiteFlexMessage(event.source.userId);
             break;
           case "richmenu=3":
             state = Enum.WIKI;
