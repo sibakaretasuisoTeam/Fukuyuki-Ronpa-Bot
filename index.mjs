@@ -194,10 +194,13 @@ function verifySignature(body, receivedSignature, channelSecret) {
 loadUserIds();
 loopRL();
 
-//lineApi.pushMessage("U3ffeea449fc263a880fd0578aa9a4acf", "起動しました");
+// lineApi.startJanken("U3ffeea449fc263a880fd0578aa9a4acf"); //泉
 
-lineApi.startJanken("U3ffeea449fc263a880fd0578aa9a4acf"); //泉
+let richMenuId = await lineApi.setRichMenu();
+richMenuId = richMenuId.data.richMenuId;
+await lineApi.uploadImage(richMenuId, "img/test.png");
+await lineApi.setDefaultRichMenu(richMenuId);
 
-//lineApi.startJanken("Ufd7b503783bad7695290ecd25dc34313"); //並河
 
-//lineApi.startJanken("Ub32f6da1c67cdec255fdc322807c9c4a"); //野尻
+
+
