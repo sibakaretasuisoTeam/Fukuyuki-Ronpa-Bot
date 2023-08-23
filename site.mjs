@@ -1,4 +1,3 @@
-// HTTP APIを実行しやすくするためのライブラリ: Axios
 import axios from "axios";
 
 class Site {

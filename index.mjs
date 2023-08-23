@@ -11,6 +11,7 @@ import dotenv from "dotenv";
 import { LineApi } from "./line-api.mjs";
 import { Wiki } from "./wiki.mjs";
 import { Site } from "./site.mjs";
+import { Card } from "./card.mjs";
 
 // .envファイル空環境変数を読み込み
 dotenv.config();
@@ -43,6 +44,7 @@ app.listen(8080);
 const lineApi = new LineApi(CHANNEL_ACCESS_TOKEN);
 const site = new Site(CHANNEL_ACCESS_TOKEN);
 const wiki = new Wiki();
+const card = new Card(CHANNEL_ACCESS_TOKEN);
 
 //ユーザーIDを格納する配列
 let userIds = [];
@@ -122,7 +124,7 @@ app.post("/webhook", (request, response, buf) => {
             break;
           case "richmenu=1":
             state = Enum.CARD;
-            await lineApi.replyMessage(event.replyToken, "リッチメニュー1");
+            await card.sendCard(event.source.userId);
             break;
           case "richmenu=2":
             state = Enum.SITE;
