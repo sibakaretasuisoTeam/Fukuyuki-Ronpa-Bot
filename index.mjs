@@ -133,6 +133,7 @@ app.post("/webhook", (request, response, buf) => {
         switch (event.postback.data) {
           case "richmenu=0":
             state = Enum.RESUBA;
+            await resubaApi.memoryReset();
             await lineApi.replyMessage(event.replyToken, "レス馬AIと会話しよう!");
             break;
           case "richmenu=1":
