@@ -7,13 +7,15 @@ import fs from "fs";
 const MAX_CONVERSATION_HISTORY = 4;
 
 //API_KEY
-const OPENAI_API_KEY = "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";
+const OPENAI_API_KEY = "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";
 const openai = new OpenAI({
     apiKey: OPENAI_API_KEY, // defaults to process.env["OPENAI_API_KEY"]
   });
+  const botRoleContentPath = "botRoleContent.txt";
   
 //filePath
 const conversationFilePath = "conversation_history.json";
+const judgeFilePath = "botJudgeContent.txt";
 
 class Resuba {
     constructor(channelSecret) {
@@ -26,16 +28,20 @@ class Resuba {
         });
         // 過去の会話データをロード
         this.conversationHistory = this.loadConversation();
+        this.botRoleContent = this.loadBotRoleContent(botRoleContentPath);
+        this.botJudgeContent = this.loadBotRoleContent(judgeFilePath);
       }
       
       async debateAI(replyToken,message) {
         // 過去の会話データと新しいメッセージからメッセージオブジェクトを構築
-        
-        //const messages = this.constructMessages(message);
+        const messages = this.constructMessages(message);
+        const botRoleContent = this.botRoleContent.join('\n'); // プロンプトを改行区切りのテキストに結合
+        const botRole = [{"role": "system", "content": botRoleContent}]
+        messages.unshift(...botRole);
         //console.log(messages);
         const completion = await openai.chat.completions.create({
-            messages: this.constructMessages(message),// JSON.stringifyを使って変換
-            model: 'gpt-3.5-turbo',
+            messages,
+            model: 'gpt-3.5-turbo', 
         });
           const aiResponse = completion.choices[0].message.content;
         
@@ -52,8 +58,6 @@ class Resuba {
             this.conversationHistory.shift();
           }
           this.saveConversation();
-        
-          console.log("ok");
     
           const body = {
             replyToken,
@@ -66,6 +70,26 @@ class Resuba {
           };
           
           return await this.api.post("/bot/message/reply", body);
+      }
+      async judgeAI(message){
+        const messages = this.constructMessages(message);
+        const botRoleContent = this.botJudgeContent.join('\n'); // プロンプトを改行区切りのテキストに結合
+        const botRole = [{"role": "system", "content": botRoleContent}]
+        messages.unshift(...botRole);
+        // 新しいレスポンス履歴を追加
+        const aiResponseHistory = this.conversationHistory.map(entry => ({
+          role: "assistant",
+          content: entry.aiResponse.content,
+      }));
+      messages.push(...aiResponseHistory);
+      console.log(messages);
+        const completion = await openai.chat.completions.create({
+          messages,
+          model: 'gpt-3.5-turbo', 
+        });
+        const aiResponse = completion.choices[0].message.content;
+        console.log(aiResponse);
+          return aiResponse;
       }
     
       constructMessages(newMessage) {
@@ -95,6 +119,15 @@ class Resuba {
           console.log("Conversation saved.");
         } catch (error) {
           console.error("Error saving conversation:", error);
+        }
+      }
+      loadBotRoleContent(Content) {
+        try {
+          const data = fs.readFileSync(Content, "utf-8");
+          return data.split('\n'); // 改行でテキストを分割して配列に格納
+        } catch (error) {
+          console.error("Error loading bot role content:", error);
+          return [];
         }
       }
 }

@@ -98,6 +98,7 @@ app.post("/webhook", (request, response, buf) => {
           default:
             // Resuba クラスを使用してAIの返答を取得
             await resubaApi.debateAI(event.replyToken, event.message.text);
+            const d = resubaApi.judgeAI(event.replyToken, event.message.text);
             break;
         }
         console.log('\x1b[34m', event.source.userId + " : " + event.message.text);
