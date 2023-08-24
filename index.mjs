@@ -44,7 +44,7 @@ app.listen(8080);
 
 const lineApi = new LineApi(CHANNEL_ACCESS_TOKEN);
 const site = new Site(CHANNEL_ACCESS_TOKEN);
-const wiki = new Wiki();
+const wiki = new Wiki(CHANNEL_ACCESS_TOKEN);
 const card = new Card(CHANNEL_ACCESS_TOKEN);
 const resubaApi = new Resuba(CHANNEL_ACCESS_TOKEN);
 
@@ -118,7 +118,7 @@ app.post("/webhook", (request, response, buf) => {
           case Enum.SITE:
             break;
           case Enum.WIKI:
-            await lineApi.replyMessage(event.replyToken, wiki.sendWiki(event.message.text));
+            await wiki.sendWiki(event.source.userId);
           default:
             break;
         }
@@ -141,10 +141,20 @@ app.post("/webhook", (request, response, buf) => {
             break;
           case "richmenu=3":
             state = Enum.WIKI;
-            await lineApi.replyMessage(event.replyToken, wiki.sendOptions());
+            await wiki.sendOptions(event.source.userId);
             break;
           case "card=1":
             await card.sendCoupon(event.source.userId);
+            break;
+          case "wiki=1":
+            await wiki.sendWiki(event.source.userId, 1);
+            break;
+          case "wiki=2":
+            await wiki.sendWiki(event.source.userId, 2);
+            break;
+          case "wiki=3":
+            await wiki.sendWiki(event.source.userId, 3);
+            break;
         }
         break;
       case "follow": // event.typeがfollowのとき応答
