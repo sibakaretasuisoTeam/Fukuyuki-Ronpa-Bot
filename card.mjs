@@ -34,6 +34,7 @@ class Card {
     const jsonData = {
       "name": n,
       "exp": 0,
+      "level": 1
     };
 
     const jsonString = JSON.stringify(jsonData);
@@ -79,8 +80,31 @@ class Card {
         level = i;
       }
     }
-    const ratio = (exp - levelup[level]) / (levelup[level + 1] - levelup[level]);
 
+    let description = "レベルアップでクーポンをGET!!";
+    if (level > 5) {
+      description = "タップしてクーポンを発行!!";
+    }
+
+    const jsonData = {
+      "name": n,
+      "exp": exp,
+      "level": level
+    };
+
+    const jsonString = JSON.stringify(jsonData);
+
+    fs.writeFile("data/" + to + ".json", jsonString, (err) => {
+      if (err) {
+        console.error('Error writing JSON file:', err);
+      }
+    });
+
+    let ratio = (exp - levelup[level]) / (levelup[level + 1] - levelup[level]);
+    //ratioが数値か確認
+    if (isNaN(ratio)) {
+      ratio = 1;
+    }
     const body = {
       to,
       messages: [
@@ -155,7 +179,7 @@ class Card {
                     },
                     {
                       "type": "text",
-                      "text": "レベルアップでクーポンGET!",
+                      "text": description,
                       "color": "#FAFAFA",
                       "size": "md",
                       "wrap": true,
@@ -178,6 +202,11 @@ class Card {
                 "angle": "40deg",
                 "startColor": "#03cffc",
                 "endColor": "#fc03e3"
+              },
+              "action": {
+                "type": "postback",
+                "label": "action",
+                "data": "card=1"
               }
             },
             "footer": {
@@ -225,6 +254,20 @@ class Card {
       ]
     };
     return await this.api.post("/bot/message/push", body);
+  }
+
+  async sendCoupon(to) {
+    const data = JSON.parse(fs.readFileSync("data/" + to + ".json", "utf-8"));
+    const level = data.level;
+    if (level > 5) {
+      await this.pushMessage(to, "越前和紙のクーポンです。\nコピーして利用して下さい。\nXXXX-XXXX-XXXX");
+    }
+    if (level > 10) {
+      await this.pushMessage(to, "若狭塗り箸のクーポンです。\nコピーして利用して下さい。\nXXXX-XXXX-XXXX");
+    }
+    if (level > 15) {
+      await this.pushMessage(to, "越前打ち刃物のクーポンです。\nコピーして利用して下さい。\nXXXX-XXXX-XXXX");
+    }
   }
 
   async pushMessage(to, messages) {

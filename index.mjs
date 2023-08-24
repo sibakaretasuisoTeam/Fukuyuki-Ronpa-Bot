@@ -136,8 +136,10 @@ app.post("/webhook", (request, response, buf) => {
           case "richmenu=3":
             state = Enum.WIKI;
             await lineApi.replyMessage(event.replyToken, wiki.sendOptions());
-            //await client.unlinkRichMenuFromUser(event.source.userId);
+            await client.unlinkRichMenuFromUser(event.source.userId);
             break;
+          case "card=1":
+            await card.sendCoupon(event.source.userId);
         }
         break;
       case "follow": // event.typeがfollowのとき応答
