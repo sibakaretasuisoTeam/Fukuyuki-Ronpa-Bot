@@ -9,6 +9,9 @@ import fs from "fs";
 import dotenv from "dotenv";
 
 import { LineApi } from "./line-api.mjs";
+import { Wiki } from "./wiki.mjs";
+import { Site } from "./site.mjs";
+import { Card } from "./card.mjs";
 import { Resuba } from "./resuba.mjs";
 
 // .envファイル空環境変数を読み込み
@@ -16,6 +19,16 @@ dotenv.config();
 // LINEのチャネルシークレットをCHANNEL_SECRET環境変数から読み込み
 const CHANNEL_SECRET = process.env.CHANNEL_SECRET;
 const CHANNEL_ACCESS_TOKEN = process.env.CHANNEL_ACCESS_TOKEN;
+
+const Enum = {
+  RESUBA: "RESUBA",
+  CARD: "CARD",
+  SITE: "SITE",
+  WIKI: "WIKI",
+  MENU: "MENU"
+}
+
+let state = Enum.MENU;
 
 // expressの初期化
 const app = express();
@@ -30,6 +43,9 @@ app.use(
 app.listen(8080);
 
 const lineApi = new LineApi(CHANNEL_ACCESS_TOKEN);
+const site = new Site(CHANNEL_ACCESS_TOKEN);
+const wiki = new Wiki();
+const card = new Card(CHANNEL_ACCESS_TOKEN);
 const resubaApi = new Resuba(CHANNEL_ACCESS_TOKEN);
 
 //ユーザーIDを格納する配列
@@ -90,58 +106,45 @@ app.post("/webhook", (request, response, buf) => {
           saveUserIds();
         }
 
-        switch (event.message.text) {
-          case "じゃんけん":
-            await lineApi.startJanken(event.source.userId);
-            break;
-
-          default:
+        switch (state) {
+          case Enum.RESUBA:
             // Resuba クラスを使用してAIの返答を取得
             await resubaApi.debateAI(event.replyToken, event.message.text);
             break;
-        }
-        console.log('\x1b[34m', event.source.userId + " : " + event.message.text);
-        break;
-      case "postback": // event.typeがpostbackのとき応答
-        //ランダムに手を選ぶ
-        const hand = Math.floor(Math.random() * 3);
-        switch (event.postback.data) {
-          case "action=gu":
-            if (hand == 0) {
-              await lineApi.replyMessage(event.replyToken, "こちらの手もぐー、あいこ！");
-            }
-            else if (hand == 1) {
-              await lineApi.replyMessage(event.replyToken, "こちらの手はちょき、あなたの勝ち！");
-            }
-            else {
-              await lineApi.replyMessage(event.replyToken, "こちらの手はぱー、あなたの負け！");
-            }
+          case Enum.CARD:
+            card.addExp(event.source.userId, Number(event.message.text));
             break;
-          case "action=choki":
-            if (hand == 0) {
-              await lineApi.replyMessage(event.replyToken, "こちらの手はぐー、あなたの負け！");
-            }
-            else if (hand == 1) {
-              await lineApi.replyMessage(event.replyToken, "こちらの手もちょき、あいこ！");
-            }
-            else {
-              await lineApi.replyMessage(event.replyToken, "こちらの手はぱー、あなたの勝ち！");
-            }
+          case Enum.SITE:
             break;
-          case "action=pa":
-            if (hand == 0) {
-              await lineApi.replyMessage(event.replyToken, "こちらの手はぐー、あなたの勝ち！");
-            }
-            else if (hand == 1) {
-              await lineApi.replyMessage(event.replyToken, "こちらの手はちょき、あなたの負け！");
-            }
-            else {
-              await lineApi.replyMessage(event.replyToken, "こちらの手もぱー、あいこ！");
-            }
-            break;
-
+          case Enum.WIKI:
+            await lineApi.replyMessage(event.replyToken, wiki.sendWiki(event.message.text));
           default:
             break;
+        }
+        break;
+      case "postback": // event.typeがpostbackのとき応答
+        switch (event.postback.data) {
+          case "richmenu=0":
+            state = Enum.RESUBA;
+            await lineApi.replyMessage(event.replyToken, "リッチメニュー0");
+            break;
+          case "richmenu=1":
+            state = Enum.CARD;
+            await card.sendCard(event.source.userId);
+            //await card.createCard(event.source.userId);
+            break;
+          case "richmenu=2":
+            state = Enum.SITE;
+            await lineApi.replyMessage(event.replyToken, site.sendDiscription());
+            await site.pushSiteFlexMessage(event.source.userId);
+            break;
+          case "richmenu=3":
+            state = Enum.WIKI;
+            await lineApi.replyMessage(event.replyToken, wiki.sendOptions());
+            await client.unlinkRichMenuFromUser(event.source.userId);
+            break;
+          case "card=1":
+            await card.sendCoupon(event.source.userId);
         }
         break;
       case "follow": // event.typeがfollowのとき応答
@@ -151,6 +154,7 @@ app.post("/webhook", (request, response, buf) => {
           saveUserIds();
         }
         await lineApi.replyMessage(event.replyToken, "友達追加ありがとう!あなたのユーザーIDは" + event.source.userId + "です");
+        break;
     }
   });
 
@@ -197,10 +201,12 @@ function verifySignature(body, receivedSignature, channelSecret) {
 loadUserIds();
 loopRL();
 
-//lineApi.pushMessage("U3ffeea449fc263a880fd0578aa9a4acf", "起動しました");
+// U3ffeea449fc263a880fd0578aa9a4acf //泉
 
-//lineApi.startJanken("U3ffeea449fc263a880fd0578aa9a4acf"); //泉
+//リッチメニュー設定
+let richMenuId = await lineApi.setRichMenu();
+richMenuId = richMenuId.data.richMenuId;
+await lineApi.uploadImage(richMenuId, "img/test.png");
+await lineApi.setDefaultRichMenu(richMenuId);
 
-//lineApi.startJanken("Ufd7b503783bad7695290ecd25dc34313"); //並河
-
-//lineApi.startJanken("Ub32f6da1c67cdec255fdc322807c9c4a"); //野尻
+//await lineApi.pushFlexMessage("U3ffeea449fc263a880fd0578aa9a4acf");
