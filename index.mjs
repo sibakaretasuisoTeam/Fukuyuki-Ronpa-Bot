@@ -153,12 +153,15 @@ app.post("/webhook", (request, response, buf) => {
             break;
           case "resuba=1":
             //越前和紙でレスバ開始
+            await resubaApi.debateAI(event.replyToken,"ディベートを始めましょう。テーマを越前和紙として先に意見を述べてください");
             break;
           case "resuba=2":
             //若狭塗り箸でレスバ開始
+            await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを若さ塗り箸として先に意見を述べてください");
             break;
           case "resuba=3":
             //越前打ち刃物でレスバ開始
+            await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを越前打ち刃物として先に意見を述べてください");
             break;
           case "card=1":
             await card.sendCoupon(event.source.userId);
