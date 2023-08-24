@@ -28,13 +28,14 @@ class Resuba {
         "Content-Type": "application/json",
       },
     });
-    // 過去の会話データをロード
-    this.conversationHistory = this.loadConversation();
     this.botRoleContent = this.loadBotRoleContent(botRoleContentPath);
     this.botJudgeContent = this.loadBotRoleContent(judgeFilePath);
   }
 
-  async debateAI(replyToken, message) {
+  async debateAI(replyToken, message,to) {
+    const convFilePath = "data/" + to + "_conv.json";
+     // 過去の会話データをロード
+     this.conversationHistory = this.loadConversation(convFilePath);
     // 過去の会話データと新しいメッセージからメッセージオブジェクトを構築
     const messages = this.constructMessages(message);
     const botRoleContent = this.botRoleContent.join('\n'); // プロンプトを改行区切りのテキストに結合
@@ -59,7 +60,7 @@ class Resuba {
     if (this.conversationHistory.length > MAX_CONVERSATION_HISTORY) {
       this.conversationHistory.shift();
     }
-    this.saveConversation();
+    this.saveConversation(convFilePath);
 
     const body = {
       replyToken,
@@ -73,7 +74,10 @@ class Resuba {
 
     return await this.api.post("/bot/message/reply", body);
   }
-  async judgeAI(message) {
+  async judgeAI(message,to) {
+    const convFilePath = "data/" + to + "_conv.json";
+     // 過去の会話データをロード
+     this.conversationHistory = this.loadConversation(convFilePath);
     const messages = this.constructMessages(message);
     const botRoleContent = this.botJudgeContent.join('\n'); // プロンプトを改行区切りのテキストに結合
     const botRole = [{ "role": "system", "content": botRoleContent }]
@@ -94,9 +98,10 @@ class Resuba {
     return aiResponse;
   }
   
-  async memoryReset(){
+  async memoryReset(to){
+    const convFilePath = "data/" + to + "_conv.json";
     try {
-      fs.writeFileSync(conversationFilePath, '', 'utf-8');
+      fs.writeFileSync(convFilePath, '', 'utf-8');
       this.conversationHistory = []; // ファイルを初期化したので、履歴も空にする
       console.log("Conversation history reset.");
     } catch (error) {
@@ -114,9 +119,9 @@ class Resuba {
   }
 
 
-  loadConversation() {
+  loadConversation(FilePath) {
     try {
-      const jsonData = fs.readFileSync(conversationFilePath, "utf-8");
+      const jsonData = fs.readFileSync(FilePath, "utf-8");
       return JSON.parse(jsonData);
     } catch (error) {
       console.error("Error loading conversation:", error);
@@ -124,10 +129,10 @@ class Resuba {
     }
   }
 
-  saveConversation() {
+  saveConversation(FilePath) {
     try {
       const json = JSON.stringify(this.conversationHistory, null, 2);
-      fs.writeFileSync(conversationFilePath, json);
+      fs.writeFileSync(FilePath, json);
       console.log("Conversation saved.");
     } catch (error) {
       console.error("Error saving conversation:", error);
