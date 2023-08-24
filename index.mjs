@@ -153,7 +153,7 @@ app.post("/webhook", (request, response, buf) => {
             break;
           case "resuba=1":
             //越前和紙でレスバ開始
-            await resubaApi.debateAI(event.replyToken,"ディベートを始めましょう。テーマを越前和紙として先に意見を述べてください");
+            await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを越前和紙として先に意見を述べてください");
             break;
           case "resuba=2":
             //若狭塗り箸でレスバ開始
@@ -237,7 +237,7 @@ loopRL();
 //リッチメニュー設定
 let richMenuId = await lineApi.setRichMenu();
 richMenuId = richMenuId.data.richMenuId;
-await lineApi.uploadImage(richMenuId, "img/test.png");
+await lineApi.uploadImage(richMenuId, "img/rich_menu.png");
 await lineApi.setDefaultRichMenu(richMenuId);
 
 //await lineApi.pushFlexMessage("U3ffeea449fc263a880fd0578aa9a4acf");
