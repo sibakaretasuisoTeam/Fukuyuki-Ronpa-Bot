@@ -126,6 +126,19 @@ class LineApi {
   async setDefaultRichMenu(richMenuId) {
     return await this.api.post("/bot/user/all/richmenu/" + richMenuId);
   }
+  // プッシュメッセージ
+  async winMessage(to) {
+    const body = {
+      to,
+      messages: [
+        {
+          type: "text",
+          text: "これまでの会話を含めておいら、負けちゃったんだよね。これっておいらの感想なんですけど福井王のおいらを言いくるめるの、素直にすごいと思うんすよね。あなたの勝ちなんでぇ、その経験値あげますよ",
+        },
+      ],
+    };
+    return await this.api.post("/bot/message/push", body);
+  }
 }
 
 export { LineApi };
