@@ -127,12 +127,12 @@ app.post("/webhook", (request, response, buf) => {
         switch (event.postback.data) {
           case "richmenu=0":
             state = Enum.RESUBA;
-            await lineApi.replyMessage(event.replyToken, "リッチメニュー0");
+            await lineApi.replyMessage(event.replyToken, "レス馬AIと会話しよう!");
             break;
           case "richmenu=1":
             state = Enum.CARD;
             await card.sendCard(event.source.userId);
-            //await card.createCard(event.source.userId);
+            // await card.createCard(event.source.userId);
             break;
           case "richmenu=2":
             state = Enum.SITE;
@@ -142,7 +142,6 @@ app.post("/webhook", (request, response, buf) => {
           case "richmenu=3":
             state = Enum.WIKI;
             await lineApi.replyMessage(event.replyToken, wiki.sendOptions());
-            await client.unlinkRichMenuFromUser(event.source.userId);
             break;
           case "card=1":
             await card.sendCoupon(event.source.userId);
@@ -155,6 +154,7 @@ app.post("/webhook", (request, response, buf) => {
           saveUserIds();
         }
         await lineApi.replyMessage(event.replyToken, "友達追加ありがとう!あなたのユーザーIDは" + event.source.userId + "です");
+        await card.createCard(event.source.userId);
         break;
     }
   });
