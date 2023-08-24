@@ -12,6 +12,7 @@ import { LineApi } from "./line-api.mjs";
 import { Wiki } from "./wiki.mjs";
 import { Site } from "./site.mjs";
 import { Card } from "./card.mjs";
+import { Resuba } from "./resuba.mjs";
 
 // .envファイル空環境変数を読み込み
 dotenv.config();
@@ -45,6 +46,7 @@ const lineApi = new LineApi(CHANNEL_ACCESS_TOKEN);
 const site = new Site(CHANNEL_ACCESS_TOKEN);
 const wiki = new Wiki();
 const card = new Card(CHANNEL_ACCESS_TOKEN);
+const resubaApi = new Resuba(CHANNEL_ACCESS_TOKEN);
 
 //ユーザーIDを格納する配列
 let userIds = [];
@@ -106,6 +108,8 @@ app.post("/webhook", (request, response, buf) => {
 
         switch (state) {
           case Enum.RESUBA:
+            // Resuba クラスを使用してAIの返答を取得
+            await resubaApi.debateAI(event.replyToken, event.message.text);
             break;
           case Enum.CARD:
             card.addExp(event.source.userId, Number(event.message.text));
@@ -114,6 +118,7 @@ app.post("/webhook", (request, response, buf) => {
             break;
           case Enum.WIKI:
             await lineApi.replyMessage(event.replyToken, wiki.sendWiki(event.message.text));
+          default:
             break;
         }
         break;
@@ -205,6 +210,3 @@ await lineApi.uploadImage(richMenuId, "img/test.png");
 await lineApi.setDefaultRichMenu(richMenuId);
 
 //await lineApi.pushFlexMessage("U3ffeea449fc263a880fd0578aa9a4acf");
-
-
-
