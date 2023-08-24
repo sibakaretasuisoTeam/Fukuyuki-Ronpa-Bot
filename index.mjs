@@ -108,6 +108,7 @@ app.post("/webhook", (request, response, buf) => {
           case Enum.RESUBA:
             break;
           case Enum.CARD:
+            card.addExp(event.source.userId, Number(event.message.text));
             break;
           case Enum.SITE:
             break;
@@ -125,6 +126,7 @@ app.post("/webhook", (request, response, buf) => {
           case "richmenu=1":
             state = Enum.CARD;
             await card.sendCard(event.source.userId);
+            //await card.createCard(event.source.userId);
             break;
           case "richmenu=2":
             state = Enum.SITE;

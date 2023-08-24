@@ -1,4 +1,15 @@
 import axios from "axios";
+import { Client } from '@line/bot-sdk';
+import fs from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
+const config = {
+  channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
+  channelSecret: process.env.CHANNEL_SECRET
+};
+
+const client = new Client(config);
 
 class Card {
   constructor(channelSecret) {
@@ -11,7 +22,65 @@ class Card {
     });
   }
 
+  async createCard(to) {
+    let n = "Name";
+    try {
+      const userProfile = await client.getProfile(to);
+      n = userProfile.displayName;
+    } catch (error) {
+      console.error('Error getting user profile:', error);
+    }
+
+    const jsonData = {
+      "name": n,
+      "exp": 0,
+    };
+
+    const jsonString = JSON.stringify(jsonData);
+
+    fs.writeFile("data/" + to + ".json", jsonString, (err) => {
+      if (err) {
+        console.error('Error writing JSON file:', err);
+      }
+    });
+  }
+
   async sendCard(to) {
+    const data = JSON.parse(fs.readFileSync("data/" + to + ".json", "utf-8"));
+    const n = data.name;
+    const exp = data.exp;
+
+    const levelup = {
+      1: 0,
+      2: 1,
+      3: 3,
+      4: 6,
+      5: 10,
+      6: 15,
+      7: 21,
+      8: 28,
+      9: 36,
+      10: 45,
+      11: 55,
+      12: 66,
+      13: 78,
+      14: 91,
+      15: 105,
+      16: 120,
+      17: 136,
+      18: 153,
+      19: 171,
+      20: 190
+    }
+
+    let level = 1;
+    for (let i = 1; i <= 20; i++) {
+      if (exp >= levelup[i]) {
+        level = i;
+      }
+    }
+    const ratio = (exp - levelup[level]) / (levelup[level + 1] - levelup[level]);
+
     const body = {
       to,
       messages: [
@@ -33,7 +102,7 @@ class Card {
                   "contents": [
                     {
                       "type": "text",
-                      "text": "Name",
+                      "text": n,
                       "color": "#ffffff",
                       "align": "start",
                       "size": "3xl",
@@ -41,7 +110,7 @@ class Card {
                     },
                     {
                       "type": "text",
-                      "text": "Lv.1",
+                      "text": "Lv." + level,
                       "color": "#ffffff",
                       "align": "center",
                       "size": "3xl",
@@ -57,7 +126,7 @@ class Card {
                   "contents": [
                     {
                       "type": "text",
-                      "text": "50%",
+                      "text": ratio * 100 + "%",
                       "color": "#ffffff",
                       "align": "start",
                       "size": "xxl",
@@ -73,7 +142,7 @@ class Card {
                           "type": "box",
                           "layout": "vertical",
                           "contents": [],
-                          "width": "50%",
+                          "width": ratio * 100 + "%",
                           "backgroundColor": "#11DD33",
                           "height": "8px",
                           "margin": "none"
@@ -117,33 +186,38 @@ class Card {
               "contents": [
                 {
                   "type": "text",
-                  "text": "それって福井のお宝ですよね？",
-                  "color": "#ffffff",
+                  "text": "product name",
+                  "color": "#FFFFFF",
                   "size": "md",
-                  "offsetBottom": "14px"
+                  "align": "end",
+                  "gravity": "top",
+                  "offsetBottom": "12px",
+                  "offsetEnd": "228px"
                 },
                 {
                   "type": "image",
                   "url": "https://qr-official.line.me/sid/L/909hmssm.png",
-                  "size": "30px",
-                  "offsetBottom": "39px",
-                  "offsetStart": "173px"
+                  "size": "28px",
+                  "gravity": "top",
+                  "align": "start",
+                  "margin": "none",
+                  "offsetBottom": "34px",
+                  "offsetStart": "303px"
                 }
               ],
               "backgroundColor": "#3f3f3f",
               "paddingTop": "19px",
               "paddingAll": "12px",
-              "paddingBottom": "16px",
-              "spacing": "none",
-              "margin": "none",
-              "height": "15px"
+              "paddingBottom": "0px",
+              "height": "40px"
             },
             "styles": {
               "header": {
                 "separatorColor": "#FFFFFF"
               },
               "footer": {
-                "separator": false
+                "separator": false,
+                "backgroundColor": "#FFFFFF00"
               }
             }
           }
@@ -151,6 +225,41 @@ class Card {
       ]
     };
     return await this.api.post("/bot/message/push", body);
+  }
+
+  async pushMessage(to, messages) {
+    const data = JSON.parse(fs.readFileSync("data/" + to + ".json", "utf-8"));
+
+
+    const body = {
+      to,
+      messages: [
+        {
+          type: "text",
+          text: messages,
+        },
+      ],
+    };
+    return await this.api.post("/bot/message/push", body);
+  }
+
+  async addExp(to, add) {
+    const data = JSON.parse(fs.readFileSync("data/" + to + ".json", "utf-8"));
+    const n = data.name;
+    const exp = data.exp;
+
+    const jsonData = {
+      "name": n,
+      "exp": exp + add,
+    };
+
+    const jsonString = JSON.stringify(jsonData);
+
+    fs.writeFile("data/" + to + ".json", jsonString, (err) => {
+      if (err) {
+        console.error('Error writing JSON file:', err);
+      }
+    });
   }
 }
 
