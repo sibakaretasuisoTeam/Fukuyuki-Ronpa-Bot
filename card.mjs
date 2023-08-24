@@ -290,10 +290,12 @@ class Card {
     const data = JSON.parse(fs.readFileSync("data/" + to + ".json", "utf-8"));
     const n = data.name;
     const exp = data.exp;
+    const level = data.level;
 
     const jsonData = {
       "name": n,
       "exp": exp + add,
+      "level": level
     };
 
     const jsonString = JSON.stringify(jsonData);

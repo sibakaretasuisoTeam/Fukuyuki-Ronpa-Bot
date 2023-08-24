@@ -112,13 +112,14 @@ app.post("/webhook", (request, response, buf) => {
             await resubaApi.debateAI(event.replyToken, event.message.text);
             const d = await resubaApi.judgeAI(event.replyToken, event.message.text);
             const ans = Number(d);
-            if(ans >= 1){
+            if (ans >= 1) {
               await lineApi.winMessage(event.source.userId);
               card.addExp(event.source.userId, (ans + (ans - 7) * 5));
-              await lineApi.pushMessage(event.source.userId,"経験値を"+ (ans + (ans - 7) * 5) +"手に入れた");
+              await lineApi.pushMessage(event.source.userId, "経験値を" + (ans + (ans - 7) * 5) + "手に入れた");
             }
             break;
           case Enum.CARD:
+            //デバッグ用
             card.addExp(event.source.userId, Number(event.message.text));
             break;
           case Enum.SITE:
