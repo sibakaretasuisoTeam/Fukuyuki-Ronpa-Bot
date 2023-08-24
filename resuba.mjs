@@ -93,6 +93,16 @@ class Resuba {
     console.log(aiResponse);
     return aiResponse;
   }
+  
+  async memoryReset(){
+    try {
+      fs.writeFileSync(conversationFilePath, '', 'utf-8');
+      this.conversationHistory = []; // ファイルを初期化したので、履歴も空にする
+      console.log("Conversation history reset.");
+    } catch (error) {
+      console.error("Error resetting conversation history:", error);
+    }
+  }
 
   constructMessages(newMessage) {
     const messages = this.conversationHistory.map((entry) => ({
