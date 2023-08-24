@@ -110,6 +110,7 @@ app.post("/webhook", (request, response, buf) => {
           case Enum.RESUBA:
             // Resuba クラスを使用してAIの返答を取得
             await resubaApi.debateAI(event.replyToken, event.message.text);
+            const d = resubaApi.judgeAI(event.replyToken, event.message.text);
             break;
           case Enum.CARD:
             card.addExp(event.source.userId, Number(event.message.text));
