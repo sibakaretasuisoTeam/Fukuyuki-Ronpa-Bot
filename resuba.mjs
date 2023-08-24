@@ -142,6 +142,50 @@ class Resuba {
       return [];
     }
   }
+
+  async sendOptions(to) {
+    const body = {
+      to,
+      messages: [
+        {
+          type: "text",
+          text: "こんちわっす。ふくゆきで〜す。どんな話題でおいらとディベートしたいっすか？",
+          "quickReply": {
+            "items": [
+              {
+                "type": "action",
+                "imageUrl": "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Bookmark%20Tabs.png",
+                "action": {
+                  "type": "postback",
+                  "label": "越前和紙",
+                  "data": "resuba=1",
+                }
+              },
+              {
+                "type": "action",
+                "imageUrl": "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Food/Chopsticks.png",
+                "action": {
+                  "type": "postback",
+                  "label": "若狭塗り箸",
+                  "data": "resuba=2",
+                }
+              },
+              {
+                "type": "action",
+                "imageUrl": "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Food/Kitchen%20Knife.png",
+                "action": {
+                  "type": "postback",
+                  "label": "越前打ち刃物",
+                  "data": "resuba=3",
+                }
+              }
+            ]
+          }
+        },
+      ]
+    };
+    return await this.api.post("/bot/message/push", body);
+  }
 }
 
 export { Resuba };

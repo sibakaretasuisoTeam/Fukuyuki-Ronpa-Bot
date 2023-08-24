@@ -135,7 +135,7 @@ app.post("/webhook", (request, response, buf) => {
           case "richmenu=0":
             state = Enum.RESUBA;
             await resubaApi.memoryReset();
-            await lineApi.replyMessage(event.replyToken, "レス馬AIと会話しよう!");
+            await resubaApi.sendOptions(event.source.userId);
             break;
           case "richmenu=1":
             state = Enum.CARD;
@@ -150,6 +150,15 @@ app.post("/webhook", (request, response, buf) => {
           case "richmenu=3":
             state = Enum.WIKI;
             await wiki.sendOptions(event.source.userId);
+            break;
+          case "resuba=1":
+            //越前和紙でレスバ開始
+            break;
+          case "resuba=2":
+            //若狭塗り箸でレスバ開始
+            break;
+          case "resuba=3":
+            //越前打ち刃物でレスバ開始
             break;
           case "card=1":
             await card.sendCoupon(event.source.userId);
