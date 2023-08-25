@@ -176,13 +176,13 @@ class Card {
               "contents": [
                 {
                   "type": "text",
-                  "text": "product name",
+                  "text": "Fukuyuki-Ronpa-Card",
                   "color": "#FFFFFF",
                   "size": "md",
                   "align": "end",
                   "gravity": "top",
                   "offsetBottom": "12px",
-                  "offsetEnd": "228px"
+                  "offsetEnd": "172px"
                 },
                 {
                   "type": "image",
