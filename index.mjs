@@ -109,8 +109,8 @@ app.post("/webhook", (request, response, buf) => {
         switch (state) {
           case Enum.RESUBA:
             // Resuba クラスを使用してAIの返答を取得
-            await resubaApi.debateAI(event.replyToken, event.message.text,event.source.userId);
-            const d = await resubaApi.judgeAI(event.replyToken, event.message.text,event.source.userId);
+            await resubaApi.debateAI(event.replyToken, event.message.text, event.source.userId);
+            const d = await resubaApi.judgeAI(event.replyToken, event.message.text, event.source.userId);
             const ans = Number(d);
             if (ans >= 7) {
               await lineApi.winMessage(event.source.userId);
@@ -125,7 +125,6 @@ app.post("/webhook", (request, response, buf) => {
           case Enum.SITE:
             break;
           case Enum.WIKI:
-            await wiki.sendWiki(event.source.userId);
           default:
             break;
         }
@@ -153,15 +152,15 @@ app.post("/webhook", (request, response, buf) => {
             break;
           case "resuba=1":
             //越前和紙でレスバ開始
-            await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを越前和紙として先に意見を述べてください",event.source.userId);
+            await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを越前和紙として先に意見を述べてください", event.source.userId);
             break;
           case "resuba=2":
             //若狭塗り箸でレスバ開始
-            await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを若さ塗り箸として先に意見を述べてください",event.source.userId);
+            await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを若さ塗り箸として先に意見を述べてください", event.source.userId);
             break;
           case "resuba=3":
             //越前打ち刃物でレスバ開始
-            await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを越前打ち刃物として先に意見を述べてください",event.source.userId);
+            await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを越前打ち刃物として先に意見を述べてください", event.source.userId);
             break;
           case "card=1":
             await card.sendCoupon(event.source.userId);
