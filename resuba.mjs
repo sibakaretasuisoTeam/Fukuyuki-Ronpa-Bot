@@ -3,6 +3,13 @@ import axios from "axios";
 import OpenAI from 'openai';
 import fs from "fs";
 import dotenv from "dotenv";
+import { setupFirebase } from "./setup-firebase.mjs";
+import { database } from "./firestore.mjs";
+
+//firebaseの初期化
+const firebase = new setupFirebase();
+const firebaseApp = firebase.setup();
+const db = new database(firebaseApp);
 
 //記憶回数制限
 const MAX_CONVERSATION_HISTORY = 4;
@@ -33,9 +40,10 @@ class Resuba {
   }
 
   async debateAI(replyToken, message,to) {
-    const convFilePath = "data/" + to + "_conv.json";
+    //const convFilePath = "data/" + to + "_conv.json";
      // 過去の会話データをロード
-     this.conversationHistory = this.loadConversation(convFilePath);
+     this.conversationHistory = await this.loadConversation(to);
+     console.log(this.conversationHistory);
     // 過去の会話データと新しいメッセージからメッセージオブジェクトを構築
     const messages = this.constructMessages(message);
     const botRoleContent = this.botRoleContent.join('\n'); // プロンプトを改行区切りのテキストに結合
@@ -56,11 +64,12 @@ class Resuba {
         content: aiResponse,
       },
     });
+    console.log(this.conversationHistory);
 
     if (this.conversationHistory.length > MAX_CONVERSATION_HISTORY) {
       this.conversationHistory.shift();
     }
-    this.saveConversation(convFilePath);
+    this.saveConversation(to);
 
     const body = {
       replyToken,
@@ -77,7 +86,7 @@ class Resuba {
   async judgeAI(message,to) {
     const convFilePath = "data/" + to + "_conv.json";
      // 過去の会話データをロード
-     this.conversationHistory = this.loadConversation(convFilePath);
+     this.conversationHistory = await this.loadConversation(to);
     const messages = this.constructMessages(message);
     const botRoleContent = this.botJudgeContent.join('\n'); // プロンプトを改行区切りのテキストに結合
     const botRole = [{ "role": "system", "content": botRoleContent }]
@@ -101,7 +110,7 @@ class Resuba {
   async memoryReset(to){
     const convFilePath = "data/" + to + "_conv.json";
     try {
-      fs.writeFileSync(convFilePath, '', 'utf-8');
+      db.resetConv(to);
       this.conversationHistory = []; // ファイルを初期化したので、履歴も空にする
       console.log("Conversation history reset.");
     } catch (error) {
@@ -114,25 +123,27 @@ class Resuba {
       role: "user",
       content: entry.userMessage, // 必要なデータだけ取り出す
     }));
+    // 新しいメッセージを追加
     messages.push({ role: "user", content: newMessage });
+  
     return messages;
   }
 
 
-  loadConversation(FilePath) {
+  loadConversation(id) {
     try {
-      const jsonData = fs.readFileSync(FilePath, "utf-8");
-      return JSON.parse(jsonData);
+      const Data = db.readConv(id);
+      console.log("Loaded conversation data:", Data); // デバッグログ
+      return Data;
     } catch (error) {
       console.error("Error loading conversation:", error);
       return [];
     }
   }
 
-  saveConversation(FilePath) {
+  saveConversation(id) {
     try {
-      const json = JSON.stringify(this.conversationHistory, null, 2);
-      fs.writeFileSync(FilePath, json);
+      db.writeConv(this.conversationHistory,id);
       console.log("Conversation saved.");
     } catch (error) {
       console.error("Error saving conversation:", error);
