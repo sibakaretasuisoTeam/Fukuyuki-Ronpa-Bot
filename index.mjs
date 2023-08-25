@@ -42,6 +42,8 @@ app.use(
 );
 // TCP/8080ポートでサーバを起動
 app.listen(8080);
+let consecutiveHits = true;
+let buttonMashing = true;
 
 const lineApi = new LineApi(CHANNEL_ACCESS_TOKEN);
 const site = new Site(CHANNEL_ACCESS_TOKEN);
@@ -109,14 +111,21 @@ app.post("/webhook", (request, response, buf) => {
 
         switch (getUserState(event.source.userId)) {
           case Enum.RESUBA:
-            // Resuba クラスを使用してAIの返答を取得
-            await resubaApi.debateAI(event.replyToken, event.message.text, event.source.userId);
-            const d = await resubaApi.judgeAI(event.replyToken, event.message.text, event.source.userId);
-            const ans = Number(d);
-            if (ans >= 7) {
-              await lineApi.winMessage(event.source.userId);
-              card.addExp(event.source.userId, (ans + (ans - 7) * 5));
-              await lineApi.pushMessage(event.source.userId, "経験値を" + (ans + (ans - 7) * 5) + "手に入れた");
+            if(buttonMashing && consecutiveHits){
+              // Resuba クラスを使用してAIの返答を取得
+              buttonMashing = false;
+              await resubaApi.debateAI(event.replyToken, event.message.text, event.source.userId);
+              const d = await resubaApi.judgeAI(event.replyToken, event.message.text, event.source.userId);
+              const ans = Number(d);
+              if (ans >= 7) {
+                await lineApi.winMessage(event.source.userId);
+                card.addExp(event.source.userId, (ans + (ans - 7) * 5));
+                await lineApi.pushMessage(event.source.userId, "経験値を" + (ans + (ans - 7) * 5) + "手に入れた");
+              }
+              buttonMashing = true;
+            }else{
+              console.log("dame");
+              await lineApi.pushMessage(event.source.userId,"回答を生成中です。しばらくお待ちください。");
             }
             break;
           case Enum.CARD:
@@ -133,7 +142,7 @@ app.post("/webhook", (request, response, buf) => {
       case "postback": // event.typeがpostbackのとき応答
         switch (event.postback.data) {
           case "richmenu=0":
-            setUserState(event.source.userId, Enum.MENU);
+            setUserState(event.source.userId, Enum.RESUBA);
             await resubaApi.memoryReset(event.source.userId);
             await resubaApi.sendOptions(event.source.userId);
             break;
@@ -152,16 +161,34 @@ app.post("/webhook", (request, response, buf) => {
             await wiki.sendOptions(event.source.userId);
             break;
           case "resuba=1":
-            //越前和紙でレスバ開始
-            await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを越前和紙として先に意見を述べてください", event.source.userId);
+            if(consecutiveHits && buttonMashing){
+              consecutiveHits = false;
+              //越前和紙でレスバ開始
+              await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを越前和紙として先に意見を述べてください", event.source.userId);
+              consecutiveHits = true;
+            }else{
+              await lineApi.pushMessage(event.source.userId,"BUTTON MASHING YAMERO")
+            }
             break;
           case "resuba=2":
+            if(consecutiveHits){
+              consecutiveHits = false;
             //若狭塗り箸でレスバ開始
             await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを若さ塗り箸として先に意見を述べてください", event.source.userId);
+              consecutiveHits = true;
+          }else{
+            await lineApi.pushMessage(event.source.userId,"BUTTON MASHING YAMERO")
+          }
             break;
           case "resuba=3":
+            if(consecutiveHits){
+              consecutiveHits = false;
             //越前打ち刃物でレスバ開始
             await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを越前打ち刃物として先に意見を述べてください", event.source.userId);
+              consecutiveHits = true;
+          }else{
+            await lineApi.pushMessage(event.source.userId,"BUTTON MASHING YAMERO")
+          }
             break;
           case "card=1":
             await card.sendCoupon(event.source.userId);
