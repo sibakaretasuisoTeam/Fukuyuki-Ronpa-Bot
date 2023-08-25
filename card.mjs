@@ -1,15 +1,11 @@
 import axios from "axios";
-import { Client } from '@line/bot-sdk';
-import fs from "fs";
-import dotenv from "dotenv";
+import { setupFirebase } from "./setup-firebase.mjs";
+import { database } from "./firestore.mjs";
 
-dotenv.config();
-const config = {
-  channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
-  channelSecret: process.env.CHANNEL_SECRET
-};
-
-const client = new Client(config);
+//firebaseの初期化
+const firebase = new setupFirebase();
+const firebaseApp = firebase.setup();
+const db = new database(firebaseApp);
 
 class Card {
   constructor(channelSecret) {
@@ -22,33 +18,8 @@ class Card {
     });
   }
 
-  async createCard(to) {
-    let n = "Name";
-    try {
-      const userProfile = await client.getProfile(to);
-      n = userProfile.displayName;
-    } catch (error) {
-      console.error('Error getting user profile:', error);
-    }
-
-    const jsonData = {
-      "name": n,
-      "exp": 0,
-      "level": 1,
-      "state": "NONE"
-    };
-
-    const jsonString = JSON.stringify(jsonData);
-
-    fs.writeFile("data/" + to + ".json", jsonString, (err) => {
-      if (err) {
-        console.error('Error writing JSON file:', err);
-      }
-    });
-  }
-
   async sendCard(to) {
-    const data = JSON.parse(fs.readFileSync("data/" + to + ".json", "utf-8"));
+    const data = await db.readUser(to);
     const n = data.name;
     const exp = data.exp;
     const state = data.state;
@@ -88,20 +59,7 @@ class Card {
       description = "タップしてクーポンを発行!!";
     }
 
-    const jsonData = {
-      "name": n,
-      "exp": exp,
-      "level": level,
-      "state": state
-    };
-
-    const jsonString = JSON.stringify(jsonData);
-
-    fs.writeFile("data/" + to + ".json", jsonString, (err) => {
-      if (err) {
-        console.error('Error writing JSON file:', err);
-      }
-    });
+    db.writeUser(to, n, exp, level, state);
 
     let ratio = (exp - levelup[level]) / (levelup[level + 1] - levelup[level]);
     //ratioが数値か確認
@@ -260,7 +218,7 @@ class Card {
   }
 
   async sendCoupon(to) {
-    const data = JSON.parse(fs.readFileSync("data/" + to + ".json", "utf-8"));
+    const data = await db.readUser(to);
     const level = data.level;
     if (level > 5) {
       await this.pushMessage(to, "越前和紙のクーポンです。\nコピーして利用して下さい。\nXXXX-XXXX-XXXX");
@@ -273,43 +231,14 @@ class Card {
     }
   }
 
-  async pushMessage(to, messages) {
-    const data = JSON.parse(fs.readFileSync("data/" + to + ".json", "utf-8"));
-
-
-    const body = {
-      to,
-      messages: [
-        {
-          type: "text",
-          text: messages,
-        },
-      ],
-    };
-    return await this.api.post("/bot/message/push", body);
-  }
-
   async addExp(to, add) {
-    const data = JSON.parse(fs.readFileSync("data/" + to + ".json", "utf-8"));
+    const data = await db.readUser(to);
     const n = data.name;
     const exp = data.exp;
     const level = data.level;
     const state = data.state;
 
-    const jsonData = {
-      "name": n,
-      "exp": exp + add,
-      "level": level,
-      "state": state
-    };
-
-    const jsonString = JSON.stringify(jsonData);
-
-    fs.writeFile("data/" + to + ".json", jsonString, (err) => {
-      if (err) {
-        console.error('Error writing JSON file:', err);
-      }
-    });
+    db.writeUser(to, n, exp + add, level, state);
   }
 }
 

@@ -29,7 +29,7 @@ class database {
       if (docSnapshot.exists()) {
         return docSnapshot.data();
       } else {
-        return null; // ドキュメントが存在しない場合はnullを返すなど適切な処理を行ってください
+        return null;
       }
     } catch (e) {
       console.error("Error getting document: ", e);

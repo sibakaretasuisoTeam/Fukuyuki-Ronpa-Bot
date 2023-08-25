@@ -3,7 +3,6 @@ import express from "express";
 import crypto from "crypto";
 
 import readline from "readline";
-import fs from "fs";
 import { Client } from '@line/bot-sdk';
 
 // 環境変数の定義を.envファイルから読み込む（開発用途用）
@@ -217,7 +216,7 @@ function verifySignature(body, receivedSignature, channelSecret) {
 
 async function createUserData(userId) {
   const userProfile = await client.getProfile(userId);
-  db.writeUser(userId, userProfile.displayName, 0, 0, Enum.NONE);
+  db.writeUser(userId, userProfile.displayName, 0, 1, Enum.NONE);
 }
 
 async function setUserState(userId, newState) {
