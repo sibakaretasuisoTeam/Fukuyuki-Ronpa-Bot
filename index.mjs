@@ -241,4 +241,20 @@ richMenuId = richMenuId.data.richMenuId;
 await lineApi.uploadImage(richMenuId, "img/rich_menu.jpg");
 await lineApi.setDefaultRichMenu(richMenuId);
 
+async function sendInvitation() {
+  const ids = await db.getUserIds();
+  const currentDate = new Date();
+  if (currentDate.getDay() == 5) {
+    ids.forEach(async (id) => {
+      await lineApi.pushMessage(id, "こんちゃーす。おいらふくゆきって言うんですけど、なんていうかその、最近あなたがあんまり構ってくれなくて、ちょっと寂しいんですよね。あのなんて言うか、全然強制するつもりはないんですけど、暇なんだったらおいらとディベートしてもらってもいいっすか？");
+    });
+  }
+}
+
+// 1時間ごとにgetCurrentTime関数を実行
+const interval = 24 * 60 * 60 * 1000;
+setInterval(sendInvitation, interval);
+
+sendInvitation();
 //await lineApi.pushFlexMessage("U3ffeea449fc263a880fd0578aa9a4acf");
+

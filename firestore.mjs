@@ -1,4 +1,4 @@
-import { getFirestore, setDoc, getDoc, doc } from 'firebase/firestore'
+import { getFirestore, setDoc, getDoc, getDocs, doc, collection } from 'firebase/firestore'
 
 class database {
   db;
@@ -35,6 +35,17 @@ class database {
       console.error("Error getting document: ", e);
       return null;
     }
+  }
+
+  async getUserIds() {
+    const usersCollectionRef = collection(this.db, "Users");
+    const querySnapshot = await getDocs(usersCollectionRef);
+
+    let userIds = [];
+    querySnapshot.forEach((doc) => {
+      userIds.push(doc.id);
+    });
+    return userIds;
   }
 }
 
