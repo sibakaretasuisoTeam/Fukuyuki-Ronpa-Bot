@@ -142,9 +142,13 @@ app.post("/webhook", (request, response, buf) => {
       case "postback": // event.typeがpostbackのとき応答
         switch (event.postback.data) {
           case "richmenu=0":
-            setUserState(event.source.userId, Enum.RESUBA);
-            await resubaApi.memoryReset(event.source.userId);
-            await resubaApi.sendOptions(event.source.userId);
+            if(consecutiveHits){
+              setUserState(event.source.userId, Enum.RESUBA);
+              await resubaApi.memoryReset(event.source.userId);
+              await resubaApi.sendOptions(event.source.userId);
+            }else{
+              await lineApi.pushMessage(event.source.userId,"BUTTON MASHING YAMERO");
+            }
             break;
           case "richmenu=1":
             setUserState(event.source.userId, Enum.CARD)
