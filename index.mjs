@@ -25,7 +25,8 @@ const Enum = {
   CARD: "CARD",
   SITE: "SITE",
   WIKI: "WIKI",
-  MENU: "MENU"
+  MENU: "MENU",
+  NONE: "NONE"
 }
 
 let state = Enum.MENU;
@@ -106,7 +107,7 @@ app.post("/webhook", (request, response, buf) => {
           saveUserIds();
         }
 
-        switch (state) {
+        switch (getUserState(event.source.userId)) {
           case Enum.RESUBA:
             // Resuba クラスを使用してAIの返答を取得
             await resubaApi.debateAI(event.replyToken, event.message.text, event.source.userId);
@@ -132,22 +133,22 @@ app.post("/webhook", (request, response, buf) => {
       case "postback": // event.typeがpostbackのとき応答
         switch (event.postback.data) {
           case "richmenu=0":
-            state = Enum.RESUBA;
+            setUserState(event.source.userId, Enum.MENU);
             await resubaApi.memoryReset(event.source.userId);
             await resubaApi.sendOptions(event.source.userId);
             break;
           case "richmenu=1":
-            state = Enum.CARD;
+            setUserState(event.source.userId, Enum.CARD)
             await card.sendCard(event.source.userId);
             // await card.createCard(event.source.userId);
             break;
           case "richmenu=2":
-            state = Enum.SITE;
+            setUserState(event.source.userId, Enum.SITE)
             await lineApi.replyMessage(event.replyToken, site.sendDiscription());
             await site.pushSiteFlexMessage(event.source.userId);
             break;
           case "richmenu=3":
-            state = Enum.WIKI;
+            setUserState(event.source.userId, Enum.WIKI)
             await wiki.sendOptions(event.source.userId);
             break;
           case "resuba=1":
@@ -227,6 +228,31 @@ function verifySignature(body, receivedSignature, channelSecret) {
   return signature === receivedSignature;
 }
 
+function setUserState(userId, newState) {
+  const data = JSON.parse(fs.readFileSync("data/" + userId + ".json", "utf-8"));
+  const n = data.name;
+  const exp = data.exp;
+  const level = data.level;
+  const jsonData = {
+    "name": n,
+    "exp": exp,
+    "level": level,
+    "state": newState
+  };
+
+  const jsonString = JSON.stringify(jsonData);
+
+  fs.writeFile("data/" + userId + ".json", jsonString, (err) => {
+    if (err) {
+      console.error('Error writing JSON file:', err);
+    }
+  });
+}
+
+function getUserState(userId) {
+  const data = JSON.parse(fs.readFileSync("data/" + userId + ".json", "utf-8"));
+  return data.state;
+}
 
 loadUserIds();
 loopRL();

@@ -34,7 +34,8 @@ class Card {
     const jsonData = {
       "name": n,
       "exp": 0,
-      "level": 1
+      "level": 1,
+      "state": "NONE"
     };
 
     const jsonString = JSON.stringify(jsonData);
@@ -50,6 +51,7 @@ class Card {
     const data = JSON.parse(fs.readFileSync("data/" + to + ".json", "utf-8"));
     const n = data.name;
     const exp = data.exp;
+    const state = data.state;
 
     const levelup = {
       1: 0,
@@ -89,7 +91,8 @@ class Card {
     const jsonData = {
       "name": n,
       "exp": exp,
-      "level": level
+      "level": level,
+      "state": state
     };
 
     const jsonString = JSON.stringify(jsonData);
@@ -291,11 +294,13 @@ class Card {
     const n = data.name;
     const exp = data.exp;
     const level = data.level;
+    const state = data.state;
 
     const jsonData = {
       "name": n,
       "exp": exp + add,
-      "level": level
+      "level": level,
+      "state": state
     };
 
     const jsonString = JSON.stringify(jsonData);
