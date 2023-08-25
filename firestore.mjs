@@ -1,4 +1,4 @@
-import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore'
+import { getFirestore, collection, addDoc, setDoc, getDoc, where, query, doc } from 'firebase/firestore'
 
 class database {
   db;
@@ -7,25 +7,34 @@ class database {
   }
 
 
-  async writeUser() {
+  async writeUser(docId, n, e, l, s) {
     try {
-      const docRef = await addDoc(collection(this.db, "Users"), {
-        name: "泉秀哉",
-        exp: 334,
-        level: 20,
-        state: "NONE"
+      const docRef = doc(this.db, "Users", docId);
+      await setDoc(docRef, {
+        name: n,
+        exp: e,
+        level: l,
+        state: s
       });
-      console.log("Document written with ID: ", docRef.id);
+      console.log("Document written with ID: ", docId);
     } catch (e) {
       console.error("Error adding document: ", e);
     }
   }
 
-  async readUser() {
-    const querySnapshot = await getDocs(collection(this.db, "Users"));
-    querySnapshot.forEach((doc) => {
-      console.log(`${doc.id} => ${doc.data()}`);
-    });
+  async readUser(docId) {
+    try {
+      const docRef = doc(this.db, "Users", docId);
+      const docSnapshot = await getDoc(docRef);
+      if (docSnapshot.exists()) {
+        return docSnapshot.data();
+      } else {
+        return null;
+      }
+    } catch (e) {
+      console.error("Error getting document: ", e);
+      return null;
+    }
   }
 }
 
