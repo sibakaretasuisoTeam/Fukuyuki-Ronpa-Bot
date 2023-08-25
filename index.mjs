@@ -4,6 +4,7 @@ import crypto from "crypto";
 
 import readline from "readline";
 import fs from "fs";
+import { Client } from '@line/bot-sdk';
 
 // 環境変数の定義を.envファイルから読み込む（開発用途用）
 import dotenv from "dotenv";
@@ -22,6 +23,13 @@ dotenv.config();
 const CHANNEL_SECRET = process.env.CHANNEL_SECRET;
 const CHANNEL_ACCESS_TOKEN = process.env.CHANNEL_ACCESS_TOKEN;
 
+const config = {
+  channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
+  channelSecret: process.env.CHANNEL_SECRET
+};
+
+const client = new Client(config);
+
 const Enum = {
   RESUBA: "RESUBA",
   CARD: "CARD",
@@ -30,8 +38,6 @@ const Enum = {
   MENU: "MENU",
   NONE: "NONE"
 }
-
-let state = Enum.MENU;
 
 // expressの初期化
 const app = express();
@@ -60,32 +66,6 @@ const wiki = new Wiki(CHANNEL_ACCESS_TOKEN);
 const card = new Card(CHANNEL_ACCESS_TOKEN);
 const resubaApi = new Resuba(CHANNEL_ACCESS_TOKEN);
 
-//ユーザーIDを格納する配列
-let userIds = [];
-
-//fsでtxtファイルにユーザーIDを保存する関数
-function saveUserIds() {
-  fs.readFile('userIds.txt', 'utf8', (err, data) => {
-    for (let userId of userIds) {
-      if (data.includes(userId)) continue;
-      fs.appendFile("userIds.txt", userId + "\n", (err) => {
-        if (err) throw err;
-      });
-    }
-  });
-}
-
-//fsでtxtファイルからユーザーIDを読み込む関数
-function loadUserIds() {
-  fs.readFile('userIds.txt', 'utf8', (err, data) => {
-    if (err) throw err;
-    // ユーザーIDを配列に保存
-    userIds = data.split('\n').filter(id => id);
-    console.log("loaded userIds:");
-    console.log(userIds);
-  });
-}
-
 // ルートのエンドポイント定義
 // レスポンスがきちんと返せているかの確認用
 app.get("/", (request, response) => {
@@ -112,13 +92,8 @@ app.post("/webhook", (request, response, buf) => {
   body.events.forEach(async (event) => {
     switch (event.type) {
       case "message": // event.typeがmessageのとき応答
-        // ユーザーIDが配列になかったら格納
-        if (!userIds.includes(event.source.userId)) {
-          userIds.push(event.source.userId);
-          saveUserIds();
-        }
 
-        switch (getUserState(event.source.userId)) {
+        switch (await getUserState(event.source.userId)) {
           case Enum.RESUBA:
             if (buttonMashing && consecutiveHits) {
               // Resuba クラスを使用してAIの返答を取得
@@ -160,9 +135,10 @@ app.post("/webhook", (request, response, buf) => {
             }
             break;
           case "richmenu=1":
+            //await createUserData(event.source.userId);
             setUserState(event.source.userId, Enum.CARD)
             await card.sendCard(event.source.userId);
-            // await card.createCard(event.source.userId);
+
             break;
           case "richmenu=2":
             setUserState(event.source.userId, Enum.SITE)
@@ -218,13 +194,8 @@ app.post("/webhook", (request, response, buf) => {
         }
         break;
       case "follow": // event.typeがfollowのとき応答
-        // ユーザーIDが配列になかったら格納
-        if (!userIds.includes(event.source.userId)) {
-          userIds.push(event.source.userId);
-          saveUserIds();
-        }
         await lineApi.replyMessage(event.replyToken, "友達追加ありがとう!あなたのユーザーIDは" + event.source.userId + "です");
-        await card.createCard(event.source.userId);
+        await createUserData(event.source.userId);
         break;
     }
   });
@@ -237,30 +208,6 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-//標準入力から関数を呼び出す
-function loopRL() {
-  rl.question("> ", async (input) => {
-    const [command, ...args] = input.split(" ");
-    switch (command) {
-      case "push":
-        await lineApi.pushMessage(args[0], args[1]);
-        break;
-      case "pushall":
-        for (let userID of userIds) {
-          await lineApi.pushMessage(userID, args.join(" "));
-        }
-        break;
-      case "friend":
-        for (let userID of userIds) {
-          console.log(userID);
-        }
-      default:
-        break;
-    }
-    loopRL();
-  });
-}
-
 // webhookの署名検証
 // https://developers.line.biz/ja/reference/messaging-api/#signature-validation
 function verifySignature(body, receivedSignature, channelSecret) {
@@ -268,34 +215,24 @@ function verifySignature(body, receivedSignature, channelSecret) {
   return signature === receivedSignature;
 }
 
-function setUserState(userId, newState) {
-  const data = JSON.parse(fs.readFileSync("data/" + userId + ".json", "utf-8"));
+async function createUserData(userId) {
+  const userProfile = await client.getProfile(userId);
+  db.writeUser(userId, userProfile.displayName, 0, 0, Enum.NONE);
+}
+
+async function setUserState(userId, newState) {
+  const data = await db.readUser(userId);
   const n = data.name;
   const exp = data.exp;
   const level = data.level;
-  const jsonData = {
-    "name": n,
-    "exp": exp,
-    "level": level,
-    "state": newState
-  };
 
-  const jsonString = JSON.stringify(jsonData);
-
-  fs.writeFile("data/" + userId + ".json", jsonString, (err) => {
-    if (err) {
-      console.error('Error writing JSON file:', err);
-    }
-  });
+  db.writeUser(userId, n, exp, level, newState);
 }
 
-function getUserState(userId) {
-  const data = JSON.parse(fs.readFileSync("data/" + userId + ".json", "utf-8"));
+async function getUserState(userId) {
+  const data = await db.readUser(userId);
   return data.state;
 }
-
-loadUserIds();
-loopRL();
 
 // U3ffeea449fc263a880fd0578aa9a4acf //泉
 
@@ -305,6 +242,4 @@ richMenuId = richMenuId.data.richMenuId;
 await lineApi.uploadImage(richMenuId, "img/rich_menu.jpg");
 await lineApi.setDefaultRichMenu(richMenuId);
 
-db.writeUser();
-db.readUser();
 //await lineApi.pushFlexMessage("U3ffeea449fc263a880fd0578aa9a4acf");
