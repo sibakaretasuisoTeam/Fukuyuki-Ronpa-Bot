@@ -220,13 +220,13 @@ class Card {
   async sendCoupon(to) {
     const data = await db.readUser(to);
     const level = data.level;
-    if (level > 5) {
+    if (level >= 5) {
       await this.pushMessage(to, "越前和紙のクーポンです。\nコピーして利用して下さい。\nXXXX-XXXX-XXXX");
     }
-    if (level > 10) {
+    if (level >= 10) {
       await this.pushMessage(to, "若狭塗り箸のクーポンです。\nコピーして利用して下さい。\nXXXX-XXXX-XXXX");
     }
-    if (level > 15) {
+    if (level >= 15) {
       await this.pushMessage(to, "越前打ち刃物のクーポンです。\nコピーして利用して下さい。\nXXXX-XXXX-XXXX");
     }
   }
@@ -239,6 +239,19 @@ class Card {
     const state = data.state;
 
     db.writeUser(to, n, exp + add, level, state);
+  }
+
+  async pushMessage(to, messages) {
+    const body = {
+      to,
+      messages: [
+        {
+          type: "text",
+          text: messages,
+        },
+      ],
+    };
+    return await this.api.post("/bot/message/push", body);
   }
 }
 

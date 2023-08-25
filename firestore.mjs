@@ -1,4 +1,4 @@
-import { getFirestore, collection, addDoc, setDoc, getDoc, where, query, doc } from 'firebase/firestore'
+import { getFirestore, setDoc, getDoc, doc } from 'firebase/firestore'
 
 class database {
   db;
