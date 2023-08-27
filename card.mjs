@@ -61,7 +61,9 @@ class Card {
 
     db.writeUser(to, n, exp, level, state);
 
-    let ratio = (exp - levelup[level]) / (levelup[level + 1] - levelup[level]);
+    let ratio = (exp - levelup[level]) / (levelup[level + 1] - levelup[level]) * 100;
+    //ratioの小数点以下を切り捨て
+    ratio = Math.floor(ratio);
     //ratioが数値か確認
     if (isNaN(ratio)) {
       ratio = 1;
@@ -111,7 +113,7 @@ class Card {
                   "contents": [
                     {
                       "type": "text",
-                      "text": ratio * 100 + "%",
+                      "text": ratio + "%",
                       "color": "#ffffff",
                       "align": "start",
                       "size": "xxl",
@@ -127,7 +129,7 @@ class Card {
                           "type": "box",
                           "layout": "vertical",
                           "contents": [],
-                          "width": ratio * 100 + "%",
+                          "width": ratio + "%",
                           "backgroundColor": "#11DD33",
                           "height": "8px",
                           "margin": "none"
