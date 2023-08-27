@@ -91,35 +91,37 @@ app.post("/webhook", (request, response, buf) => {
   body.events.forEach(async (event) => {
     switch (event.type) {
       case "message": // event.typeがmessageのとき応答
-
-        switch (await getUserState(event.source.userId)) {
-          case Enum.RESUBA:
-            if (buttonMashing && consecutiveHits) {
-              // Resuba クラスを使用してAIの返答を取得
-              buttonMashing = false;
-              await resubaApi.debateAI(event.replyToken, event.message.text, event.source.userId);
-              const d = await resubaApi.judgeAI(event.replyToken, event.message.text, event.source.userId);
-              const ans = Number(d);
-              if (ans >= 7) {
-                await lineApi.winMessage(event.source.userId);
-                card.addExp(event.source.userId, (ans + (ans - 7) * 5));
-                await lineApi.pushMessage(event.source.userId, "経験値を" + (ans + (ans - 7) * 5) + "手に入れた");
+        if (event.message.type == "text") {
+          switch (await getUserState(event.source.userId)) {
+            case Enum.RESUBA:
+              if (buttonMashing && consecutiveHits) {
+                // Resuba クラスを使用してAIの返答を取得
+                buttonMashing = false;
+                await resubaApi.debateAI(event.replyToken, event.message.text, event.source.userId);
+                const d = await resubaApi.judgeAI(event.replyToken, event.message.text, event.source.userId);
+                const ans = Number(d);
+                if (ans >= 7) {
+                  await lineApi.winMessage(event.source.userId);
+                  card.addExp(event.source.userId, (ans + (ans - 7) * 5));
+                  await lineApi.pushMessage(event.source.userId, "経験値を" + (ans + (ans - 7) * 5) + "手に入れた");
+                }
+                buttonMashing = true;
+              } else {
+                console.log("dame");
+                await lineApi.pushMessage(event.source.userId, "回答を生成中です。しばらくお待ちください。");
               }
-              buttonMashing = true;
-            } else {
-              console.log("dame");
-              await lineApi.pushMessage(event.source.userId, "回答を生成中です。しばらくお待ちください。");
-            }
-            break;
-          case Enum.CARD:
-            //デバッグ用
-            card.addExp(event.source.userId, Number(event.message.text));
-            break;
-          case Enum.SITE:
-            break;
-          case Enum.WIKI:
-          default:
-            break;
+              break;
+            case Enum.CARD:
+              //デバッグ用
+              card.addExp(event.source.userId, Number(event.message.text));
+              break;
+            case Enum.SITE:
+              break;
+            case Enum.WIKI:
+            default:
+              break;
+          }
+          break;
         }
         break;
       case "postback": // event.typeがpostbackのとき応答
