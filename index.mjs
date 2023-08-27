@@ -132,7 +132,7 @@ app.post("/webhook", (request, response, buf) => {
               await resubaApi.memoryReset(event.source.userId);
               await resubaApi.sendOptions(event.source.userId);
             } else {
-              await lineApi.pushMessage(event.source.userId, "BUTTON MASHING YAMERO");
+              await lineApi.pushMessage(event.source.userId, "回答を生成中です。\nしばらくお待ちください。");
             }
             break;
           case "richmenu=1":
@@ -151,34 +151,25 @@ app.post("/webhook", (request, response, buf) => {
             await wiki.sendOptions(event.source.userId);
             break;
           case "resuba=1":
-            if (consecutiveHits && buttonMashing) {
-              consecutiveHits = false;
-              //越前和紙でレスバ開始
-              await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを越前和紙として先に意見を述べてください", event.source.userId);
-              consecutiveHits = true;
-            } else {
-              await lineApi.pushMessage(event.source.userId, "BUTTON MASHING YAMERO")
-            }
+            consecutiveHits = false;
+            //越前和紙でレスバ開始
+            await lineApi.pushMessage(event.source.userId, "回答を生成中です。\nしばらくお待ちください。");
+            await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを越前和紙として先に意見を述べてください", event.source.userId);
+            consecutiveHits = true;
             break;
           case "resuba=2":
-            if (consecutiveHits) {
-              consecutiveHits = false;
-              //若狭塗り箸でレスバ開始
-              await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを若さ塗り箸として先に意見を述べてください", event.source.userId);
-              consecutiveHits = true;
-            } else {
-              await lineApi.pushMessage(event.source.userId, "BUTTON MASHING YAMERO")
-            }
+            consecutiveHits = false;
+            //若狭塗り箸でレスバ開始
+            await lineApi.pushMessage(event.source.userId, "回答を生成中です。\nしばらくお待ちください。");
+            await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを若さ塗り箸として先に意見を述べてください", event.source.userId);
+            consecutiveHits = true;
             break;
           case "resuba=3":
-            if (consecutiveHits) {
-              consecutiveHits = false;
-              //越前打ち刃物でレスバ開始
-              await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを越前打ち刃物として先に意見を述べてください", event.source.userId);
-              consecutiveHits = true;
-            } else {
-              await lineApi.pushMessage(event.source.userId, "BUTTON MASHING YAMERO")
-            }
+            consecutiveHits = false;
+            //越前打ち刃物でレスバ開始
+            await lineApi.pushMessage(event.source.userId, "回答を生成中です。\nしばらくお待ちください。");
+            await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを越前打ち刃物として先に意見を述べてください", event.source.userId);
+            consecutiveHits = true;
             break;
           case "card=1":
             await card.sendCoupon(event.source.userId);
