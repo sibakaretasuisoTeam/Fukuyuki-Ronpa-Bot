@@ -104,10 +104,10 @@ app.post("/webhook", (request, response, buf) => {
                 await resubaApi.debateAI(event.replyToken, event.message.text, event.source.userId);
                 const d = await resubaApi.judgeAI(event.replyToken, event.message.text, event.source.userId);
                 const ans = Number(d);
-                if (ans >= 7) {
+                if (ans >= 6) {
                   await lineApi.winMessage(event.source.userId);
                   card.addExp(event.source.userId, (ans + (ans - 7) * 5));
-                  await lineApi.pushMessage(event.source.userId, "経験値を" + (ans + (ans - 7) * 5) + "手に入れた");
+                  await lineApi.pushMessage(event.source.userId, "経験値を" + (ans + (ans - 6) * 5) + "手に入れた");
                 }
                 flag[event.source.userId] = false;
               } else if(flag[event.source.userId] == true){
