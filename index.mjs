@@ -110,7 +110,9 @@ app.post("/webhook", (request, response, buf) => {
                   await lineApi.pushMessage(event.source.userId, "経験値を" + (ans + (ans - 7) * 5) + "手に入れた");
                 }
                 flag[event.source.userId] = false;
-              } else {
+              } else if(flag[event.source.userId] == true){
+                await lineApi.pushMessage(event.source.userId, "回答を生成中です。\nしばらくお待ちください。");
+              }else {
                 console.log("dame");
                 await lineApi.pushMessage(event.source.userId, "回答を生成中です。しばらくお待ちください。");
               }
@@ -138,8 +140,10 @@ app.post("/webhook", (request, response, buf) => {
               setUserState(event.source.userId, Enum.RESUBA);
               await resubaApi.memoryReset(event.source.userId);
               await resubaApi.sendOptions(event.source.userId);
+            }else if(flag[event.source.userId] == true){
+              await lineApi.pushMessage(event.source.userId, "回答を生成中です。\nしばらくお待ちください。");
             }else{
-              await lineApi.pushMessage(event.source.userId, "別の方かあなたがディベート中です。\nAPIの制限回避のためしばらくお待ちください。");
+              await lineApi.pushMessage(event.source.userId, "別の方がディベート中です。\nAPIの制限回避のためしばらくお待ちください。");
             }
             break;
           case "richmenu=1":
