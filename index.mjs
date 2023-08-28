@@ -186,7 +186,6 @@ app.post("/webhook", (request, response, buf) => {
         }
         break;
       case "follow": // event.typeがfollowのとき応答
-        await lineApi.replyMessage(event.replyToken, "友達追加ありがとう!あなたのユーザーIDは" + event.source.userId + "です");
         await createUserData(event.source.userId);
         break;
     }
