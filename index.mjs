@@ -27,6 +27,9 @@ const config = {
   channelSecret: process.env.CHANNEL_SECRET
 };
 
+//API管理のオブジェクト配列
+let flag = {};
+
 const client = new Client(config);
 
 const Enum = {
@@ -94,9 +97,10 @@ app.post("/webhook", (request, response, buf) => {
         if (event.message.type == "text") {
           switch (await getUserState(event.source.userId)) {
             case Enum.RESUBA:
-              if (buttonMashing && consecutiveHits) {
+              console.log(flag);
+              if (hasTrueFlag(flag)) {
                 // Resuba クラスを使用してAIの返答を取得
-                buttonMashing = false;
+                flag[event.source.userId] = true;
                 await resubaApi.debateAI(event.replyToken, event.message.text, event.source.userId);
                 const d = await resubaApi.judgeAI(event.replyToken, event.message.text, event.source.userId);
                 const ans = Number(d);
@@ -105,7 +109,7 @@ app.post("/webhook", (request, response, buf) => {
                   card.addExp(event.source.userId, (ans + (ans - 7) * 5));
                   await lineApi.pushMessage(event.source.userId, "経験値を" + (ans + (ans - 7) * 5) + "手に入れた");
                 }
-                buttonMashing = true;
+                flag[event.source.userId] = false;
               } else {
                 console.log("dame");
                 await lineApi.pushMessage(event.source.userId, "回答を生成中です。しばらくお待ちください。");
@@ -127,12 +131,15 @@ app.post("/webhook", (request, response, buf) => {
       case "postback": // event.typeがpostbackのとき応答
         switch (event.postback.data) {
           case "richmenu=0":
-            if (consecutiveHits) {
+            console.log(flag);
+            if (hasTrueFlag(flag)) {
+              console.log(flag);
+              flag[event.source.userId] = true;
               setUserState(event.source.userId, Enum.RESUBA);
               await resubaApi.memoryReset(event.source.userId);
               await resubaApi.sendOptions(event.source.userId);
-            } else {
-              await lineApi.pushMessage(event.source.userId, "回答を生成中です。\nしばらくお待ちください。");
+            }else{
+              await lineApi.pushMessage(event.source.userId, "別の方かあなたがディベート中です。\nAPIの制限回避のためしばらくお待ちください。");
             }
             break;
           case "richmenu=1":
@@ -155,21 +162,21 @@ app.post("/webhook", (request, response, buf) => {
             //越前和紙でレスバ開始
             await lineApi.pushMessage(event.source.userId, "回答を生成中です。\nしばらくお待ちください。");
             await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを越前和紙として先に意見を述べてください", event.source.userId);
-            consecutiveHits = true;
+            flag[event.source.userId] = false;
             break;
           case "resuba=2":
             consecutiveHits = false;
             //若狭塗り箸でレスバ開始
             await lineApi.pushMessage(event.source.userId, "回答を生成中です。\nしばらくお待ちください。");
             await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを若さ塗り箸として先に意見を述べてください", event.source.userId);
-            consecutiveHits = true;
+            flag[event.source.userId] = false;
             break;
           case "resuba=3":
             consecutiveHits = false;
             //越前打ち刃物でレスバ開始
             await lineApi.pushMessage(event.source.userId, "回答を生成中です。\nしばらくお待ちください。");
             await resubaApi.debateAI(event.replyToken, "ディベートを始めましょう。テーマを越前打ち刃物として先に意見を述べてください", event.source.userId);
-            consecutiveHits = true;
+            flag[event.source.userId] = false;
             break;
           case "card=1":
             await card.sendCoupon(event.source.userId);
@@ -241,6 +248,16 @@ async function sendInvitation() {
       await lineApi.pushMessage(id, "こんちゃーす。おいらふくゆきって言うんですけど、なんていうかその、最近あなたがあんまり構ってくれなくて、ちょっと寂しいんですよね。あのなんて言うか、全然強制するつもりはないんですけど、暇なんだったらおいらとディベートしてもらってもいいっすか？");
     });
   }
+}
+
+//フラグ判定
+function hasTrueFlag(obj) {
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key) && obj[key] === true) {
+      return false;
+    }
+  }
+  return true;
 }
 
 // 1時間ごとにgetCurrentTime関数を実行
